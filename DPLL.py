@@ -1,13 +1,12 @@
 # I want to start the DPLL algorithmn here
 # https://en.wikipedia.org/wiki/DPLL_algorithm
 
-# TODO Unit propagation - IF there is only choce for a clause, do it
-# TODO Pure Literal Elimination - Elimiating clauses that have no effect on the rest of the system
+# TODO Could start chosing the most frequent literal
 
 class DPLL:
     def __init__(self, clauses:list[list]):
         if not clauses:
-            raise ValueError("No Clauses given")
+            raise ValueError("No clauses provided. At least one clause is required.")
         
         self.clauses = clauses
         self.solved = False
@@ -35,12 +34,13 @@ class DPLL:
                 new_clauses.append(clause)
         return new_clauses
     
-    def unit_propagate(self, clauses:list, assignment:dict):
+    def unit_propagate(self, clauses:list, assignments:dict):
         """
         Perform unit propagation on clauses (list of lists).
-        Returns (updated_clauses, updated_assignment).
+        Returns (updated_clauses, updated_assignments).
         """
 
+        assignments = assignments.copy()  # Create a copy to avoid side effects
         changed = True
         while changed:
             changed = False
@@ -50,21 +50,22 @@ class DPLL:
                 break
             # Pick one unit clause to propagate
             unit = unit_clauses[0]
-            assignment[abs(unit)] = unit > 0
+            assignments[abs(unit)] = unit > 0
 
             clauses = self.update_clauses(clauses, unit)
             if clauses is None:
                 return None, None
             changed = True  # Since we modified the formula, check for more unit clauses
 
-        return clauses, assignment
+        return clauses, assignments
 
-    def pure_literal_elimination(self, clauses:list, assignment:dict):
+    def pure_literal_elimination(self, clauses:list, assignments:dict):
         """
         Perform pure literal elimination on clauses (list of lists).
-        Returns (updated_clauses, updated_assignment).
+        Returns (updated_clauses, updated_assignments).
         """
 
+        assignments = assignments.copy()  
         changed = True
         while changed:
             changed = False
@@ -80,13 +81,13 @@ class DPLL:
             if pure_literal is None:
                 break
             
-            assignment[abs(pure_literal)] = pure_literal > 0
+            assignments[abs(pure_literal)] = pure_literal > 0
 
             clauses = [clause for clause in clauses if pure_literal not in clause]
 
             changed = True  # Since we modified the formula, check for more pure literals
 
-        return clauses, assignment
+        return clauses, assignments
 
     # ---------------------------------Solver-----------------------
     def solve(self):
@@ -99,6 +100,7 @@ class DPLL:
 
         self.satisfiable = self.recursive_solve(clauses, assignments)
         self.solved = True
+        return self.satisfiable
 
 
     def recursive_solve(self, clauses:list, assignments:dict):  
@@ -128,23 +130,32 @@ class DPLL:
         if yes_literal_clauses is None:
             yes_bool = False
         else:
-            yes_bool = self.recursive_solve(yes_literal_clauses, assignments)
+            yes_bool = self.recursive_solve(yes_literal_clauses, assignments| {abs(literal): literal > 0})
         
-        no_literal_clauses = self.update_clauses(clauses, literal)
+        no_literal_clauses = self.update_clauses(clauses, -literal)
         if no_literal_clauses is None:
             no_bool = False
         else:
-            no_bool = self.recursive_solve(no_literal_clauses, assignments)
+            no_bool = self.recursive_solve(no_literal_clauses, assignments| {abs(literal): literal < 0})
 
 
         return yes_bool or no_bool
     
     # ---------------prints------------------
     def results(self):
+        """
+        Get the satisfiability result.
+        
+        Returns:
+            bool: True if the formula is satisfiable, False if unsatisfiable.
+            
+        Raises:
+            RuntimeError: If solve() has not been called yet.
+        """
         if self.solved:
             return self.satisfiable
         else:
-            raise RuntimeError("Solver not activated yet")
+            raise RuntimeError("Solver not activated yet. Call solve() first.")
 
 
 if __name__ == "__main__":
