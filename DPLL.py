@@ -1,15 +1,12 @@
-# I want to start the DPLL algorithmn here
+from solver import Solver
+
 # https://en.wikipedia.org/wiki/DPLL_algorithm
 
 # TODO Could start chosing the most frequent literal
 
-class DPLL:
+class DPLL(Solver):
     def __init__(self, clauses:list[list]):
-        if not clauses:
-            raise ValueError("No clauses provided. At least one clause is required.")
-        
-        self.clauses = clauses
-        self.solved = False
+        super().__init__(clauses)
 
     # -------------------Helper Functions----------------------------
     def update_clauses(self, clauses:list, literal:int):
@@ -92,7 +89,7 @@ class DPLL:
     # ---------------------------------Solver-----------------------
     def solve(self):
         """
-        Perfroms the DPLL algorithm on a list of clauses (lists)
+        Performs the DPLL algorithm on a list of clauses (lists)
         returns True is satisfiable, False if otherwise
         """
         clauses = self.clauses
@@ -105,7 +102,7 @@ class DPLL:
 
     def recursive_solve(self, clauses:list, assignments:dict):  
         """
-        Perfroms the DPLL algorithm on a list of clauses (lists)
+        Performs the DPLL algorithm on a list of clauses (lists)
         returns True is satisfiable, False if otherwise
         """
         
@@ -140,22 +137,6 @@ class DPLL:
 
 
         return yes_bool or no_bool
-    
-    # ---------------prints------------------
-    def results(self):
-        """
-        Get the satisfiability result.
-        
-        Returns:
-            bool: True if the formula is satisfiable, False if unsatisfiable.
-            
-        Raises:
-            RuntimeError: If solve() has not been called yet.
-        """
-        if self.solved:
-            return self.satisfiable
-        else:
-            raise RuntimeError("Solver not activated yet. Call solve() first.")
 
 
 if __name__ == "__main__":
